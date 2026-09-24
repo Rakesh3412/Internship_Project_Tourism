@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Travel Wishlist & Itinerary Planner - TourVista{% endblock %}
+
+{% block content %}
+<div class="bg-dark text-white py-5" style="background: linear-gradient(135deg, #0f172a, #be123c);">
+  <div class="container py-2">
+    <div class="d-flex align-items-center gap-3">
+      <div class="info-icon-wrapper bg-white text-danger" style="width: 54px; height: 54px; font-size: 1.5rem;">
+        <i class="fas fa-heart"></i>
+      </div>
+      <div>
+        <span class="badge bg-danger px-3 py-1 rounded-pill fw-bold">Personalized Planner</span>
+        <h1 class="display-5 fw-bold mb-0 text-white">Your Travel Wishlist</h1>
+      </div>
+    </div>
+    <p class="lead text-light opacity-90 mb-0 mt-2">
+      View and organize the dream destinations you've saved.
+    </p>
+  </div>
+</div>
+
+<div class="container py-5">
+  {% if saved_places %}
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-bold mb-0">Saved Destinations ({{ saved_places.count }})</h4>
+      <a href="{% url 'tourism_app:places_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+        <i class="fas fa-plus me-1"></i> Add More Places
+      </a>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="row g-4 mb-5">
+      {% for place in saved_places %}
+        <div class="col-md-6 col-lg-4 wishlist-card-col">
+          <div class="card-modern">
+            <div class="card-img-container">
+              <img src="{{ place.display_cover }}" alt="{{ place.name }}">
+              <span class="badge-floating bg-dark bg-opacity-75 text-white">
+                <i class="fas fa-map-pin text-danger me-1"></i> {{ place.city }}
+              </span>
+              
+              <!-- Wishlist active toggle -->
+              <button class="btn-wishlist active" data-place-id="{{ place.id }}" title="Remove from Wishlist">
+                <i class="fas fa-heart"></i>
+              </button>
+            </div>
+
+            <div class="card-body-modern">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-light text-primary border small">{{ place.category.name|default:'Landmark' }}</span>
+                <span class="place-rating-badge"><i class="fas fa-star text-warning"></i> {{ place.rating }}</span>
+              </div>
+
+              <h5 class="fw-bold mb-1">
+                <a href="{{ place.get_absolute_url }}" class="text-dark text-decoration-none stretched-link">
+                  {{ place.name }}
+                </a>
+              </h5>
+
+              <p class="small text-muted mb-3 flex-grow-1">
+                {{ place.short_summary|truncatechars:85 }}
+              </p>
+
+              <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-auto small text-muted">
+                <span><i class="fas fa-ticket-alt text-primary me-1"></i> {{ place.entry_fee|truncatechars:16 }}</span>
+                <span class="fw-semibold text-primary"><i class="fas fa-map-marked me-1"></i> {{ place.state.name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Unified Wishlist Map -->
+    <div class="info-card-box p-4 mb-4">
+      <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+        <i class="fas fa-map-marked-alt text-danger"></i> Wishlist Route & Map
+      </h4>
+      <div id="wishlistMap" class="map-container-box"></div>
+    </div>
+
+  {% else %}
+    <div class="col-12 text-center py-5">
+      <div class="info-card-box p-5 text-center my-4">
+        <i class="far fa-heart fa-4x text-muted mb-3"></i>
+        <h3 class="fw-bold mb-2">Your wishlist is currently empty</h3>
+        <p class="text-muted mb-4" style="max-width: 460px; margin: 0 auto;">
+          Click the heart icon on any tourist place or state card to save it here and build your customized travel itinerary.
+        </p>
+        <a href="{% url 'tourism_app:places_list' %}" class="btn btn-primary-custom rounded-pill px-4 py-2">
+          <i class="fas fa-compass me-1"></i> Explore Tourist Places
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if saved_places %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const markers = JSON.parse('{{ map_markers_json|escapejs }}');
+    initTourismMap('wishlistMap', markers);
+  });
+</script>
+{% endif %}
+{% endblock %}

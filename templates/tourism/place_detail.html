@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ place.name }} ({{ place.city }}, {{ place.state.name }}) - TourVista Guide{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'tourism_app:home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'tourism_app:states_list' %}">States</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'tourism_app:state_detail' place.state.slug %}">{{ place.state.name }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ place.name }}</li>
+    </ol>
+  </nav>
+
+  <!-- Title & Action Bar -->
+  <div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-3">
+    <div>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-semibold">
+          <i class="fas {{ place.category.icon|default:'fa-map-pin' }} me-1"></i> {{ place.category.name|default:'Landmark' }}
+        </span>
+        <a href="{% url 'tourism_app:state_detail' place.state.slug %}" class="badge bg-secondary-subtle text-secondary border px-3 py-1 rounded-pill text-decoration-none fw-semibold">
+          <i class="fas fa-map-marked-alt me-1"></i> {{ place.state.name }}
+        </a>
+      </div>
+
+      <h1 class="display-5 fw-extrabold mb-1">{{ place.name }}</h1>
+      <p class="text-muted lead mb-0">
+        <i class="fas fa-location-dot text-danger me-1"></i> {{ place.address }}
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-danger rounded-pill px-3 btn-wishlist-detail btn-wishlist {% if is_in_wishlist %}active{% endif %}" data-place-id="{{ place.id }}" style="position: static; width: auto; height: auto; border-radius: 30px; padding: 0.5rem 1rem;">
+        <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+        <span>{% if is_in_wishlist %}Saved in Wishlist{% else %}Save to Wishlist{% endif %}</span>
+      </button>
+
+      <button class="btn btn-primary-custom rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#inquiryModal">
+        <i class="fas fa-paper-plane me-1"></i> Book / Inquire Trip
+      </button>
+    </div>
+  </div>
+
+  <!-- Image Gallery & Key Highlights Row -->
+  <div class="row g-4 mb-5">
+    
+    <!-- Gallery Column -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+        <img id="placeMainImage" src="{{ place.display_cover }}" alt="{{ place.name }}" class="w-100" style="height: 440px; object-fit: cover; transition: opacity 0.2s ease;">
+      </div>
+
+      <!-- Thumbnail Thumbnails Switcher -->
+      {% if gallery_images %}
+        <div class="d-flex gap-2 overflow-x-auto pb-2">
+          <!-- Main Cover Thumbnail -->
+          <button class="btn p-0 border-2 rounded-3 overflow-hidden gallery-thumb-btn border-primary shadow" data-img-src="{{ place.display_cover }}" style="width: 100px; height: 68px; flex-shrink: 0;">
+            <img src="{{ place.display_cover }}" alt="Cover" class="w-100 h-100 object-fit-cover">
+          </button>
+          
+          {% for img in gallery_images %}
+            <button class="btn p-0 border-2 rounded-3 overflow-hidden gallery-thumb-btn" data-img-src="{{ img.display_image }}" style="width: 100px; height: 68px; flex-shrink: 0;">
+              <img src="{{ img.display_image }}" alt="{{ img.caption|default:'Photo' }}" class="w-100 h-100 object-fit-cover">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Quick Info Cards -->
+    <div class="col-lg-4">
+      <div class="info-card-box h-100 d-flex flex-column justify-content-between">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Visitor Information</h5>
+            <span class="place-rating-badge" style="font-size: 1rem; padding: 4px 12px;">
+              <i class="fas fa-star text-warning"></i> {{ place.rating }} ({{ reviews.count }} Reviews)
+            </span>
+          </div>
+
+          <div class="d-flex align-items-start gap-3 mb-3 border-bottom pb-3">
+            <div class="info-icon-wrapper"><i class="fas fa-ticket-alt"></i></div>
+            <div>
+              <small class="text-muted d-block">Entry Ticket Fee</small>
+              <span class="fw-bold text-dark">{{ place.entry_fee }}</span>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-start gap-3 mb-3 border-bottom pb-3">
+            <div class="info-icon-wrapper"><i class="fas fa-clock"></i></div>
+            <div>
+              <small class="text-muted d-block">Visiting Timings</small>
+              <span class="fw-bold text-dark">{{ place.timings }}</span>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-start gap-3 mb-3 border-bottom pb-3">
+            <div class="info-icon-wrapper"><i class="fas fa-calendar-alt"></i></div>
+            <div>
+              <small class="text-muted d-block">Best Season to Visit</small>
+              <span class="fw-bold text-dark">{{ place.best_season }}</span>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-start gap-3">
+            <div class="info-icon-wrapper"><i class="fas fa-map-pin"></i></div>
+            <div>
+              <small class="text-muted d-block">Coordinates & Region</small>
+              <span class="fw-bold text-dark">{{ place.latitude }}, {{ place.longitude }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top">
+          <a href="{{ place.google_map_search_url }}" target="_blank" class="btn btn-outline-primary w-100 rounded-pill fw-semibold">
+            <i class="fas fa-diamond-turn-right me-1"></i> Get Directions on Google Maps
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Detailed Overview & How to Reach -->
+  <div class="row g-4 mb-5">
+    
+    <!-- Left Column: Details -->
+    <div class="col-lg-8">
+      
+      <!-- Overview -->
+      <div class="info-card-box mb-4">
+        <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+          <i class="fas fa-align-left text-primary"></i> About {{ place.name }}
+        </h4>
+        <p class="text-muted lead" style="font-size: 1.05rem;">{{ place.short_summary }}</p>
+        <p class="text-muted" style="line-height: 1.8;">{{ place.detailed_description }}</p>
+
+        {% if place.highlights %}
+          <hr class="my-4">
+          <h5 class="fw-bold mb-3"><i class="fas fa-star text-warning me-2"></i> Key Highlights & Activities</h5>
+          <div class="p-3 bg-light rounded-3 text-muted">
+            {{ place.highlights }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- How to Reach -->
+      <div class="info-card-box mb-4">
+        <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+          <i class="fas fa-route text-primary"></i> How to Reach {{ place.name }}
+        </h4>
+        
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="info-icon-wrapper" style="background: #e0f2fe; color: #0284c7;"><i class="fas fa-plane"></i></div>
+          <div>
+            <h6 class="fw-bold mb-1">By Air</h6>
+            <p class="text-muted small mb-0">{{ place.how_to_reach_air|default:'Nearest airport connects major domestic and international airlines.' }}</p>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="info-icon-wrapper" style="background: #fef3c7; color: #d97706;"><i class="fas fa-train"></i></div>
+          <div>
+            <h6 class="fw-bold mb-1">By Train</h6>
+            <p class="text-muted small mb-0">{{ place.how_to_reach_train|default:'Superfast and express trains connect to the nearest railway junction.' }}</p>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-start gap-3">
+          <div class="info-icon-wrapper" style="background: #dcfce7; color: #15803d;"><i class="fas fa-bus"></i></div>
+          <div>
+            <h6 class="fw-bold mb-1">By Road / Cab</h6>
+            <p class="text-muted small mb-0">{{ place.how_to_reach_road|default:'Smooth national and state highways with state-run and private luxury bus operators.' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Map -->
+      <div class="info-card-box mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <i class="fas fa-map-location-dot text-primary"></i> Location & GPS Map
+          </h4>
+          <span class="small text-muted">{{ place.city }}, {{ place.state.name }}</span>
+        </div>
+
+        <div id="placeSingleMap" class="map-container-box"></div>
+      </div>
+
+      <!-- Visitor Reviews Section -->
+      <div class="info-card-box mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-0 d-flex align-items-center gap-2">
+              <i class="fas fa-comments text-primary"></i> Visitor Reviews & Ratings
+            </h4>
+            <small class="text-muted">{{ reviews.count }} traveler reviews</small>
+          </div>
+
+          <button class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="collapse" data-bs-target="#reviewFormCollapse">
+            <i class="fas fa-pen me-1"></i> Write a Review
+          </button>
+        </div>
+
+        <!-- Review Form (Collapsed by default) -->
+        <div class="collapse mb-4" id="reviewFormCollapse">
+          <div class="p-4 bg-light rounded-4 border">
+            <h5 class="fw-bold mb-3">Share Your Travel Experience</h5>
+            <form action="{% url 'tourism_app:submit_review' place.id %}" method="POST">
+              {% csrf_token %}
+              <div class="row g-2 mb-2">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Your Name *</label>
+                  {{ review_form.user_name }}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Email Address *</label>
+                  {{ review_form.user_email }}
+                </div>
+              </div>
+
+              <div class="row g-2 mb-2">
+                <div class="col-md-4">
+                  <label class="form-label small fw-semibold">Rating (1 to 5 Stars) *</label>
+                  {{ review_form.rating }}
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label small fw-semibold">Review Title</label>
+                  {{ review_form.title }}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Your Review & Travel Tips *</label>
+                {{ review_form.comment }}
+              </div>
+
+              <button type="submit" class="btn btn-primary-custom btn-sm rounded-pill px-4">
+                Submit Review
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Existing Reviews List -->
+        {% for rev in reviews %}
+          <div class="review-bubble">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                  {{ rev.user_name|slice:":1"|upper }}
+                </div>
+                <div>
+                  <h6 class="mb-0 fw-bold">{{ rev.user_name }}</h6>
+                  <small class="text-muted">{{ rev.created_at|date:"M d, Y" }}</small>
+                </div>
+              </div>
+
+              <div class="text-warning small">
+                {% for i in "12345"|make_list %}
+                  {% if forloop.counter <= rev.rating %}
+                    <i class="fas fa-star"></i>
+                  {% else %}
+                    <i class="far fa-star"></i>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+
+            {% if rev.title %}
+              <h6 class="fw-semibold text-dark mb-1">{{ rev.title }}</h6>
+            {% endif %}
+            <p class="text-muted small mb-0">{{ rev.comment }}</p>
+          </div>
+        {% empty %}
+          <div class="text-center py-4 text-muted">
+            <i class="far fa-comment-dots fa-2x mb-2 text-light"></i>
+            <p class="mb-0">No reviews yet for {{ place.name }}. Be the first to share your experience!</p>
+          </div>
+        {% endfor %}
+
+      </div>
+
+    </div>
+
+    <!-- Right Column: Similar Places & Quick Sidebar Inquiry -->
+    <div class="col-lg-4">
+      
+      <!-- Similar Places in State -->
+      {% if similar_places %}
+        <div class="info-card-box mb-4">
+          <h5 class="fw-bold mb-3"><i class="fas fa-compass text-primary me-2"></i> Nearby in {{ place.state.name }}</h5>
+          
+          <div class="d-flex flex-column gap-3">
+            {% for sp in similar_places %}
+              <a href="{{ sp.get_absolute_url }}" class="d-flex align-items-center gap-3 text-decoration-none text-dark p-2 rounded-3 hover-bg-light">
+                <img src="{{ sp.display_cover }}" alt="{{ sp.name }}" style="width: 70px; height: 55px; object-fit: cover; border-radius: 8px;">
+                <div>
+                  <h6 class="fw-bold mb-0 text-truncate" style="max-width: 180px;">{{ sp.name }}</h6>
+                  <small class="text-muted"><i class="fas fa-map-pin text-danger me-1"></i> {{ sp.city }}</small>
+                  <div class="text-warning small"><i class="fas fa-star"></i> {{ sp.rating }}</div>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Quick Inquiry Card -->
+      <div class="card border-0 shadow-lg rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #0f172a, #0284c7);">
+        <h5 class="fw-bold mb-2">Want to Visit {{ place.name }}?</h5>
+        <p class="small text-light opacity-90 mb-3">Get customized hotel packages, private vehicle transfers, and local guided tours.</p>
+        <button class="btn btn-warning fw-bold w-100 rounded-pill py-2 text-dark" data-bs-toggle="modal" data-bs-target="#inquiryModal">
+          <i class="fas fa-paper-plane me-1"></i> Request Tour Itinerary
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Booking / Inquiry Modal -->
+<div class="modal fade" id="inquiryModal" tabindex="-1" aria-labelledby="inquiryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-2xl rounded-4">
+      <div class="modal-header bg-primary text-white p-3">
+        <h5 class="modal-title fw-bold" id="inquiryModalLabel"><i class="fas fa-paper-plane me-2"></i> Inquire About {{ place.name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'tourism_app:submit_inquiry' %}" method="POST">
+        {% csrf_token %}
+        <div class="modal-body p-4">
+          <input type="hidden" name="destination_state" value="{{ place.state.id }}">
+          <input type="hidden" name="destination_place" value="{{ place.id }}">
+          
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Your Full Name *</label>
+            {{ inquiry_form.name }}
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Email Address *</label>
+              {{ inquiry_form.email }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Phone / WhatsApp *</label>
+              {{ inquiry_form.phone }}
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Expected Travel Date</label>
+              {{ inquiry_form.travel_date }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Travelers Count</label>
+              {{ inquiry_form.travelers_count }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Budget Category</label>
+            {{ inquiry_form.budget_range }}
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Travel Notes / Preferences</label>
+            {{ inquiry_form.message }}
+          </div>
+        </div>
+        <div class="modal-footer bg-light p-3">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-custom rounded-pill px-4">Submit Travel Inquiry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const singleMarker = JSON.parse('{{ place_map_json|escapejs }}');
+    initTourismMap('placeSingleMap', singleMarker);
+  });
+</script>
+{% endblock %}

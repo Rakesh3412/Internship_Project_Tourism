@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tourist Places & Attractions Directory - TourVista{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-dark text-white py-5" style="background: linear-gradient(135deg, #0f172a, #0369a1);">
+  <div class="container py-2">
+    <div class="row align-items-center justify-content-between g-3">
+      <div class="col-lg-7">
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2">Destinations Explorer</span>
+        <h1 class="display-5 fw-bold mb-1">Tourist Attractions in India</h1>
+        <p class="text-light opacity-90 mb-0">Search, filter, and discover top-rated monuments, hill retreats, beaches, and wildlife sanctuaries.</p>
+      </div>
+      <div class="col-lg-5 text-lg-end">
+        <span class="badge bg-white bg-opacity-25 text-white p-2 px-3 rounded-pill">
+          <i class="fas fa-compass text-warning me-1"></i> {{ places.count }} Destinations Listed
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Filter Sidebar (Left Column) -->
+    <div class="col-lg-3">
+      <div class="info-card-box sticky-top" style="top: 90px; z-index: 10;">
+        <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between">
+          <span><i class="fas fa-filter text-primary me-2"></i> Filter Places</span>
+          {% if query or selected_state or selected_category %}
+            <a href="{% url 'tourism_app:places_list' %}" class="small text-danger text-decoration-none">Clear</a>
+          {% endif %}
+        </h5>
+
+        <form method="GET" action="{% url 'tourism_app:places_list' %}">
+          <!-- Text Search -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted">Keyword Search</label>
+            <div class="input-group">
+              <input type="text" name="q" value="{{ query }}" class="form-control form-control-sm" placeholder="City, attraction, fort...">
+              <button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-search"></i></button>
+            </div>
+          </div>
+
+          <!-- State Filter -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted">Filter by State</label>
+            <select name="state" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All States</option>
+              {% for st in all_states %}
+                <option value="{{ st.slug }}" {% if selected_state == st.slug %}selected{% endif %}>
+                  {{ st.name }} ({{ st.places.count }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Category Filter -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted">Filter by Category</label>
+            <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Categories</option>
+              {% for cat in all_categories %}
+                <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+                  {{ cat.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Sort Filter -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted">Sort Results</label>
+            <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated ★</option>
+              <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+              <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Alphabetical (A-Z)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary-custom btn-sm w-100 mt-2">
+            Apply Filters
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Places Grid (Right Column) -->
+    <div class="col-lg-9">
+      
+      {% if query or selected_state or selected_category %}
+        <div class="d-flex align-items-center justify-content-between mb-3 p-3 bg-white rounded-3 border">
+          <small class="text-muted">
+            Found <b>{{ places.count }}</b> places matching filters
+          </small>
+          <a href="{% url 'tourism_app:places_list' %}" class="btn btn-sm btn-outline-secondary py-0">Reset All</a>
+        </div>
+      {% endif %}
+
+      <div class="row g-4">
+        {% for place in places %}
+          <div class="col-md-6 col-xl-4">
+            <div class="card-modern">
+              <div class="card-img-container">
+                <img src="{{ place.display_cover }}" alt="{{ place.name }}">
+                <span class="badge-floating bg-dark bg-opacity-75 text-white">
+                  <i class="fas fa-map-pin text-danger me-1"></i> {{ place.city }}
+                </span>
+                
+                <button class="btn-wishlist {% if place.id in wishlist %}active{% endif %}" data-place-id="{{ place.id }}" title="Toggle Wishlist">
+                  <i class="{% if place.id in wishlist %}fas{% else %}far{% endif %} fa-heart"></i>
+                </button>
+              </div>
+
+              <div class="card-body-modern">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="badge bg-light text-primary border small">{{ place.category.name|default:'Landmark' }}</span>
+                  <span class="place-rating-badge"><i class="fas fa-star text-warning"></i> {{ place.rating }}</span>
+                </div>
+
+                <h5 class="fw-bold mb-1">
+                  <a href="{{ place.get_absolute_url }}" class="text-dark text-decoration-none stretched-link">
+                    {{ place.name }}
+                  </a>
+                </h5>
+
+                <p class="small text-muted mb-3 flex-grow-1">
+                  {{ place.short_summary|truncatechars:85 }}
+                </p>
+
+                <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-auto small text-muted">
+                  <span><i class="fas fa-ticket-alt text-primary me-1"></i> {{ place.entry_fee|truncatechars:16 }}</span>
+                  <span class="fw-semibold text-primary"><i class="fas fa-map-marked me-1"></i> {{ place.state.name }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-12 text-center py-5">
+            <div class="info-card-box p-5 text-center">
+              <i class="fas fa-compass fa-3x text-muted mb-3"></i>
+              <h4 class="fw-bold">No attractions match the selected criteria</h4>
+              <p class="text-muted">Try removing some filters or searching for another keyword.</p>
+              <a href="{% url 'tourism_app:places_list' %}" class="btn btn-primary-custom rounded-pill px-4">Reset Filters</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

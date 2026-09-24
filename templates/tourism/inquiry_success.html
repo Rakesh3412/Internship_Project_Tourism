@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inquiry Submitted Successfully - TourVista{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="info-card-box p-5 mx-auto" style="max-width: 600px;">
+    <div class="info-icon-wrapper bg-success bg-opacity-10 text-success mx-auto mb-4" style="width: 72px; height: 72px; font-size: 2.2rem; border-radius: 50%;">
+      <i class="fas fa-check"></i>
+    </div>
+    
+    <h2 class="fw-bold mb-2">Thank You, {{ inquiry.name }}!</h2>
+    <p class="lead text-muted mb-4">
+      Your trip inquiry has been received with reference ID <b>#TV-{{ inquiry.id|stringformat:"04d" }}</b>.
+    </p>
+
+    <div class="bg-light p-3 rounded-3 text-start small mb-4">
+      <div class="d-flex justify-content-between mb-1">
+        <span class="text-muted">Destination:</span>
+        <span class="fw-bold text-dark">
+          {% if inquiry.destination_place %}{{ inquiry.destination_place.name }} ({{ inquiry.destination_state.name }})
+          {% elif inquiry.destination_state %}{{ inquiry.destination_state.name }}
+          {% else %}India Tourism{% endif %}
+        </span>
+      </div>
+      <div class="d-flex justify-content-between mb-1">
+        <span class="text-muted">Travelers:</span>
+        <span class="fw-bold text-dark">{{ inquiry.travelers_count }} Persons</span>
+      </div>
+      <div class="d-flex justify-content-between mb-1">
+        <span class="text-muted">Budget Tier:</span>
+        <span class="fw-bold text-dark">{{ inquiry.budget_range }}</span>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Contact:</span>
+        <span class="fw-bold text-dark">{{ inquiry.email }} | {{ inquiry.phone }}</span>
+      </div>
+    </div>
+
+    <p class="small text-muted mb-4">
+      Our certified local tour specialist will review your request and reach out to you via email / WhatsApp within 2-4 business hours with custom itinerary options.
+    </p>
+
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'tourism_app:home' %}" class="btn btn-primary-custom rounded-pill px-4">
+        <i class="fas fa-home me-1"></i> Return Home
+      </a>
+      <a href="{% url 'tourism_app:places_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+        Explore More Places
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

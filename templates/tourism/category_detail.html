@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} Tourism & Destinations - TourVista{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-dark text-white py-5" style="background: linear-gradient(135deg, #0f172a, #0284c7);">
+  <div class="container py-3">
+    <div class="d-flex align-items-center gap-3 mb-2">
+      <div class="info-icon-wrapper bg-white text-primary" style="width: 56px; height: 56px; font-size: 1.6rem;">
+        <i class="fas {{ category.icon }}"></i>
+      </div>
+      <div>
+        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold">Travel Category</span>
+        <h1 class="display-5 fw-bold mb-0 text-white">{{ category.name }}</h1>
+      </div>
+    </div>
+    
+    {% if category.description %}
+      <p class="lead text-light opacity-90 mb-0 mt-2" style="max-width: 700px;">
+        {{ category.description }}
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Showing {{ places.count }} Destinations</h4>
+    <a href="{% url 'tourism_app:places_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+      Explore All Categories
+    </a>
+  </div>
+
+  <div class="row g-4">
+    {% for place in places %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card-modern">
+          <div class="card-img-container">
+            <img src="{{ place.display_cover }}" alt="{{ place.name }}">
+            <span class="badge-floating bg-dark bg-opacity-75 text-white">
+              <i class="fas fa-map-pin text-danger me-1"></i> {{ place.city }}
+            </span>
+            
+            <button class="btn-wishlist {% if place.id in wishlist %}active{% endif %}" data-place-id="{{ place.id }}" title="Toggle Wishlist">
+              <i class="{% if place.id in wishlist %}fas{% else %}far{% endif %} fa-heart"></i>
+            </button>
+          </div>
+
+          <div class="card-body-modern">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <a href="{% url 'tourism_app:state_detail' place.state.slug %}" class="badge bg-light text-primary border text-decoration-none">
+                <i class="fas fa-map-marked-alt me-1"></i> {{ place.state.name }}
+              </a>
+              <span class="place-rating-badge"><i class="fas fa-star text-warning"></i> {{ place.rating }}</span>
+            </div>
+
+            <h5 class="fw-bold mb-1">
+              <a href="{{ place.get_absolute_url }}" class="text-dark text-decoration-none stretched-link">
+                {{ place.name }}
+              </a>
+            </h5>
+
+            <p class="small text-muted mb-3 flex-grow-1">
+              {{ place.short_summary|truncatechars:95 }}
+            </p>
+
+            <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-auto small text-muted">
+              <span><i class="fas fa-clock text-primary me-1"></i> {{ place.timings|truncatechars:18 }}</span>
+              <span class="fw-semibold text-success"><i class="fas fa-ticket-alt me-1"></i> {{ place.entry_fee|truncatechars:16 }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12 text-center py-5">
+        <i class="fas {{ category.icon }} fa-3x text-muted mb-3"></i>
+        <h5 class="fw-bold">No tourist places currently listed under {{ category.name }}.</h5>
+        <a href="{% url 'tourism_app:places_list' %}" class="btn btn-primary-custom btn-sm rounded-pill mt-2">Browse All Places</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

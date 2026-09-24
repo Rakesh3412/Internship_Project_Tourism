@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ state.name }} Tourism - Places to Visit, Maps & Travel Guide | TourVista{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'tourism_app:home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'tourism_app:states_list' %}">States</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ state.name }}</li>
+    </ol>
+  </nav>
+
+  <!-- State Hero Banner -->
+  <div class="detail-hero-banner" style="background-image: url('{{ state.display_banner }}');">
+    <div class="detail-hero-overlay"></div>
+    
+    <div class="detail-hero-content w-100">
+      <div class="d-flex flex-wrap gap-2 mb-2">
+        <span class="fact-badge"><i class="fas fa-city text-warning"></i> Capital: <b>{{ state.capital }}</b></span>
+        <span class="fact-badge"><i class="fas fa-sun text-warning"></i> Best Season: <b>{{ state.best_time_to_visit }}</b></span>
+        <span class="fact-badge"><i class="fas fa-cloud-sun text-info"></i> Climate: <b>{{ state.climate }}</b></span>
+        <span class="fact-badge"><i class="fas fa-language text-success"></i> Languages: <b>{{ state.languages }}</b></span>
+      </div>
+
+      <h1 class="display-4 fw-extrabold text-white mb-1">{{ state.name }}</h1>
+      {% if state.tagline %}
+        <p class="lead text-light opacity-90 mb-3 fw-medium">"{{ state.tagline }}"</p>
+      {% endif %}
+
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <a href="#placesSection" class="btn btn-primary-custom rounded-pill px-4">
+          <i class="fas fa-compass me-1"></i> View {{ places.count }} Tourist Places
+        </a>
+        <a href="#mapSection" class="btn btn-outline-light rounded-pill px-4">
+          <i class="fas fa-map-marked-alt me-1"></i> Interactive Map
+        </a>
+        <button class="btn btn-accent-custom rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#stateInquiryModal">
+          <i class="fas fa-envelope me-1"></i> Plan a Trip to {{ state.name }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Overview & Highlights -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-8">
+      <div class="info-card-box">
+        <h3 class="fw-bold mb-3 d-flex align-items-center gap-2">
+          <i class="fas fa-info-circle text-primary"></i> About {{ state.name }} Tourism
+        </h3>
+        <p class="text-muted lead" style="font-size: 1.05rem;">{{ state.description }}</p>
+
+        {% if state.history_culture %}
+          <hr class="my-4">
+          <h4 class="fw-bold mb-2 text-dark"><i class="fas fa-landmark text-warning me-2"></i> Culture & Heritage</h4>
+          <p class="text-muted mb-0">{{ state.history_culture }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="info-card-box">
+        <h5 class="fw-bold mb-3">Quick Travel Facts</h5>
+        
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="info-icon-wrapper"><i class="fas fa-calendar-check"></i></div>
+          <div>
+            <small class="text-muted d-block">Ideal Travel Period</small>
+            <span class="fw-bold text-dark">{{ state.best_time_to_visit }}</span>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="info-icon-wrapper"><i class="fas fa-temperature-half"></i></div>
+          <div>
+            <small class="text-muted d-block">Climate</small>
+            <span class="fw-bold text-dark">{{ state.climate }}</span>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="info-icon-wrapper"><i class="fas fa-comments"></i></div>
+          <div>
+            <small class="text-muted d-block">Spoken Languages</small>
+            <span class="fw-bold text-dark">{{ state.languages }}</span>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+          <div class="info-icon-wrapper"><i class="fas fa-map-pin"></i></div>
+          <div>
+            <small class="text-muted d-block">Major Attractions</small>
+            <span class="fw-bold text-dark">{{ state.places.count }} Documented Spots</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Tourist Places Section -->
+  <div id="placesSection" class="mb-5 pt-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+      <div>
+        <span class="text-primary fw-bold text-uppercase small" style="letter-spacing: 1px;">Attractions Directory</span>
+        <h2 class="h3 fw-bold mb-0">Tourist Places in {{ state.name }}</h2>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="d-flex flex-wrap gap-1">
+        <a href="{% url 'tourism_app:state_detail' state.slug %}" class="btn btn-sm rounded-pill px-3 {% if not selected_category %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+          All ({{ state.places.count }})
+        </a>
+        {% for cat in categories %}
+          <a href="{% url 'tourism_app:state_detail' state.slug %}?category={{ cat.slug }}#placesSection" class="btn btn-sm rounded-pill px-3 {% if selected_category == cat.slug %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            <i class="fas {{ cat.icon }} me-1 small"></i> {{ cat.name }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Places Cards -->
+    <div class="row g-4">
+      {% for place in places %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card-modern">
+            <div class="card-img-container">
+              <img src="{{ place.display_cover }}" alt="{{ place.name }}">
+              <span class="badge-floating bg-dark bg-opacity-75 text-white">
+                <i class="fas fa-map-pin text-danger me-1"></i> {{ place.city }}
+              </span>
+              
+              <button class="btn-wishlist" data-place-id="{{ place.id }}" title="Save to Wishlist">
+                <i class="far fa-heart"></i>
+              </button>
+            </div>
+
+            <div class="card-body-modern">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-light text-primary border small">{{ place.category.name|default:'Attraction' }}</span>
+                <span class="place-rating-badge"><i class="fas fa-star text-warning"></i> {{ place.rating }}</span>
+              </div>
+
+              <h5 class="fw-bold mb-1">
+                <a href="{{ place.get_absolute_url }}" class="text-dark text-decoration-none stretched-link">
+                  {{ place.name }}
+                </a>
+              </h5>
+
+              <p class="small text-muted mb-3 flex-grow-1">
+                {{ place.short_summary|truncatechars:95 }}
+              </p>
+
+              <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-auto small text-muted">
+                <span><i class="fas fa-clock text-primary me-1"></i> {{ place.timings|truncatechars:18 }}</span>
+                <span class="fw-semibold text-success"><i class="fas fa-ticket-alt me-1"></i> {{ place.entry_fee|truncatechars:15 }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center py-5">
+          <i class="fas fa-mountain-sun fa-3x text-muted mb-3"></i>
+          <h5 class="fw-bold">No places found under this category in {{ state.name }}.</h5>
+          <a href="{% url 'tourism_app:state_detail' state.slug %}" class="btn btn-outline-primary btn-sm rounded-pill mt-2">View All {{ state.name }} Places</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Interactive Map Section -->
+  <div id="mapSection" class="mb-5 pt-3">
+    <div class="info-card-box p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <span class="text-primary fw-bold text-uppercase small">Geographic Exploration</span>
+          <h3 class="fw-bold mb-0"><i class="fas fa-map-marked-alt text-primary me-2"></i> {{ state.name }} Tourist Map</h3>
+        </div>
+        <small class="text-muted">Click any marker to see attraction details</small>
+      </div>
+
+      <div id="stateMap" class="map-container-box"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- State Inquiry Modal -->
+<div class="modal fade" id="stateInquiryModal" tabindex="-1" aria-labelledby="stateInquiryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-2xl rounded-4">
+      <div class="modal-header bg-primary text-white p-3">
+        <h5 class="modal-title fw-bold" id="stateInquiryModalLabel"><i class="fas fa-paper-plane me-2"></i> Plan Trip to {{ state.name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'tourism_app:submit_inquiry' %}" method="POST">
+        {% csrf_token %}
+        <div class="modal-body p-4">
+          <input type="hidden" name="destination_state" value="{{ state.id }}">
+          
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Your Full Name *</label>
+            {{ inquiry_form.name }}
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Email Address *</label>
+              {{ inquiry_form.email }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Phone / WhatsApp *</label>
+              {{ inquiry_form.phone }}
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Expected Travel Date</label>
+              {{ inquiry_form.travel_date }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Travelers Count</label>
+              {{ inquiry_form.travelers_count }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Budget Category</label>
+            {{ inquiry_form.budget_range }}
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Trip Requests / Notes</label>
+            {{ inquiry_form.message }}
+          </div>
+        </div>
+        <div class="modal-footer bg-light p-3">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-custom rounded-pill px-4">Submit Travel Inquiry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const markers = JSON.parse('{{ map_markers_json|escapejs }}');
+    initTourismMap('stateMap', markers);
+  });
+</script>
+{% endblock %}
